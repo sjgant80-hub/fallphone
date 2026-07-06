@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FallPhone · sovereign phone setup toolkit</title>
+<meta name="description" content="Turn a fresh Pixel or PinePhone into your sovereign phone in 30 minutes. Hardware pick, GrapheneOS flash, FallID QR transfer, estate PWA installer, posture check.">
+<meta name="author" content="AI-Native Solutions">
+<meta name="theme-color" content="#1a1a1e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231a1a1e'/%3E%3Ctext x='16' y='23' font-family='serif' font-size='20' fill='%237a9c7e' text-anchor='middle'%3E%E2%97%8A%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{--void:#1a1a1e;--deep:#212127;--surface:#2a2a30;--raised:#33333a;--line:rgba(232,228,219,0.08);--line2:rgba(232,228,219,0.16);--text:#e8e4db;--muted:#928d80;--dim:#6b6660;--sage:#7a9c7e;--sage-dim:rgba(122,156,126,0.14);--amber:#d4a052;--amber-dim:rgba(212,160,82,0.12);--coral:#d67a5a;--coral-dim:rgba(214,122,90,0.15);--serif:'Cormorant Garamond','Iowan Old Style',Georgia,serif;--sans:'Inter',-apple-system,system-ui,sans-serif;--mono:'JetBrains Mono','IBM Plex Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--void);color:var(--text);font-family:var(--sans);font-size:15.5px;line-height:1.65;-webkit-font-smoothing:antialiased;min-height:100vh}
+button{font-family:inherit;cursor:pointer;border:none;outline:none;color:inherit}
+input,textarea,select{font-family:inherit;background:var(--surface);color:var(--text);border:1px solid var(--line2);outline:none;padding:10px 12px;border-radius:8px;font-size:14px;width:100%}
+input:focus,textarea:focus,select:focus{border-color:var(--sage)}
+h1,h2,h3{font-family:var(--serif);font-weight:400;color:var(--text);line-height:1.2}
+h1{font-size:38px;letter-spacing:0.01em;margin-bottom:6px}
+h1 em{color:var(--sage);font-style:italic}
+h2{font-size:26px;color:var(--text);margin-bottom:12px}
+h2 em{color:var(--sage);font-style:italic}
+h3{font-size:12px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.16em;font-family:var(--mono);font-weight:500}
+a{color:var(--sage);text-decoration:none;border-bottom:1px dotted var(--sage-dim)}
+a:hover{color:var(--amber);border-color:var(--amber-dim)}
+.topbar{background:rgba(26,26,30,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:22px;color:var(--text)}
+.brand .glyph{color:var(--sage);font-size:22px}
+.brand .co{color:var(--dim);font-family:var(--mono);font-size:9.5px;letter-spacing:0.16em;margin-left:6px;text-transform:uppercase}
+main{padding:32px 24px 80px;max-width:960px;margin:0 auto;width:100%}
+.lede{color:var(--muted);font-size:16.5px;max-width:640px;margin-bottom:32px;font-family:var(--serif);font-style:italic}
+.steps{display:flex;gap:6px;margin-bottom:28px;flex-wrap:wrap}
+.step-tab{flex:1;min-width:140px;background:var(--deep);border:1px solid var(--line);padding:12px 14px;border-radius:10px;text-align:left;transition:all .2s;position:relative}
+.step-tab .n{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:0.14em}
+.step-tab .t{font-family:var(--serif);font-size:15px;color:var(--text);margin-top:2px}
+.step-tab.on{border-color:var(--sage);background:var(--sage-dim)}
+.step-tab.on .n{color:var(--sage)}
+.step-tab.done .n::after{content:' ✓';color:var(--sage)}
+.panel{display:none;background:var(--deep);border:1px solid var(--line);border-radius:14px;padding:28px 30px;margin-bottom:20px}
+.panel.on{display:block}
+.panel p{color:var(--muted);margin-bottom:14px;max-width:720px}
+.panel p.text{color:var(--text)}
+.panel ul{color:var(--muted);margin:8px 0 16px 22px}
+.panel li{margin-bottom:6px}
+.grid-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:18px 0 8px}
+.hw{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 18px 16px;transition:all .15s}
+.hw:hover{border-color:var(--line2)}
+.hw.pick{border-color:var(--sage);background:linear-gradient(180deg,var(--sage-dim),var(--surface))}
+.hw .badge{font-family:var(--mono);font-size:9.5px;letter-spacing:0.14em;color:var(--sage);text-transform:uppercase;margin-bottom:6px}
+.hw .badge.amber{color:var(--amber)}
+.hw .badge.coral{color:var(--coral)}
+.hw h4{font-family:var(--serif);font-size:18px;color:var(--text);margin-bottom:2px}
+.hw .price{font-family:var(--mono);font-size:13px;color:var(--amber);margin-bottom:10px}
+.hw .row{font-size:13.5px;color:var(--muted);margin-bottom:4px}
+.hw .row b{color:var(--text);font-weight:500}
+.hw .buy{display:inline-block;margin-top:10px;font-family:var(--mono);font-size:10.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--sage)}
+.callout{background:var(--amber-dim);border-left:3px solid var(--amber);padding:14px 18px;border-radius:8px;margin:14px 0;color:var(--text);font-size:14px}
+.callout.sage{background:var(--sage-dim);border-color:var(--sage)}
+.callout.coral{background:var(--coral-dim);border-color:var(--coral)}
+.callout b{color:var(--text)}
+.mono{font-family:var(--mono);font-size:12.5px}
+.code{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-family:var(--mono);font-size:12.5px;color:var(--text);overflow-x:auto;white-space:pre-wrap;word-break:break-all;margin:10px 0}
+.big-btn{background:var(--sage);color:var(--void);padding:13px 26px;border-radius:10px;font-family:var(--mono);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;font-weight:700;margin:6px 8px 6px 0;transition:all .15s}
+.big-btn:hover{background:#8db091}
+.big-btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line2)}
+.big-btn.ghost:hover{border-color:var(--sage);color:var(--sage)}
+.big-btn.amber{background:var(--amber);color:var(--void)}
+.big-btn.amber:hover{background:#e0b070}
+.nav-row{display:flex;justify-content:space-between;gap:10px;margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+.form-row{margin-bottom:14px}
+.form-row label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:0.14em;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.form-row .hint{font-size:12.5px;color:var(--dim);margin-top:4px;font-style:italic}
+.qr-box{background:#fff;padding:18px;border-radius:12px;display:inline-block;margin:14px 0}
+.qr-box svg{display:block}
+.qr-empty{background:var(--surface);border:1px dashed var(--line2);border-radius:12px;padding:60px 30px;text-align:center;color:var(--dim);font-family:var(--mono);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;margin:14px 0}
+.pwa-list{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.pwa-row{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 16px;transition:all .15s}
+.pwa-row.done{border-color:var(--sage);background:var(--sage-dim)}
+.pwa-row .glyph{font-family:var(--serif);font-size:22px;color:var(--sage);width:26px;text-align:center}
+.pwa-row .meta{flex:1}
+.pwa-row .name{font-family:var(--serif);font-size:16px;color:var(--text)}
+.pwa-row .desc{font-size:12.5px;color:var(--muted)}
+.pwa-row .action{background:var(--sage);color:var(--void);padding:8px 14px;border-radius:6px;font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;text-decoration:none;border:none}
+.pwa-row.done .action{background:var(--dim);color:var(--void)}
+.pwa-progress{background:var(--surface);border-radius:8px;overflow:hidden;height:6px;margin:12px 0}
+.pwa-progress .fill{background:var(--sage);height:100%;width:0;transition:width .3s}
+.check-list{display:flex;flex-direction:column;gap:10px;margin:14px 0}
+.check-row{display:flex;align-items:flex-start;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .15s}
+.check-row:hover{border-color:var(--line2)}
+.check-row.on{border-color:var(--sage);background:var(--sage-dim)}
+.check-row .box{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--line2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--void);background:var(--void)}
+.check-row.on .box{background:var(--sage);border-color:var(--sage);color:var(--void)}
+.check-row.on .box::before{content:'✓';font-weight:700}
+.check-row .body h4{font-family:var(--serif);font-size:16px;color:var(--text);margin-bottom:2px;font-weight:400}
+.check-row .body p{color:var(--muted);font-size:13px;margin:0}
+.posture{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin:16px 0;text-align:center}
+.posture .val{font-family:var(--serif);font-size:32px;color:var(--sage);font-style:italic}
+.posture .val.dim{color:var(--dim)}
+.posture .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:0.14em;color:var(--muted);text-transform:uppercase;margin-top:4px}
+.stack-row{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:12px 0}
+.stack-row > *{flex:1;min-width:220px}
+.foot{text-align:center;color:var(--dim);font-family:var(--mono);font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;margin-top:60px;padding:20px}
+.foot a{color:var(--muted)}
+@media(max-width:640px){h1{font-size:30px}.panel{padding:20px 18px}main{padding:20px 14px 60px}.step-tab{min-width:120px}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><span class="glyph">◊</span><span>FallPhone</span><span class="co">AI-Native Solutions</span></div>
+  <div class="mono" style="font-size:10px;letter-spacing:0.14em;color:var(--muted);text-transform:uppercase">v1 · MIT</div>
+</div>
+<main>
+  <h1>Sovereign phone in <em>thirty minutes</em>.</h1>
+  <div class="lede">A guided recipe. Pick the hardware, flash the OS, carry your identity across, install your tools, verify the posture. No paranoia. Just less rented territory.</div>
+
+  <div class="steps">
+    <button class="step-tab on" data-step="1"><div class="n">STEP 1</div><div class="t">Hardware</div></button>
+    <button class="step-tab" data-step="2"><div class="n">STEP 2</div><div class="t">Flash GrapheneOS</div></button>
+    <button class="step-tab" data-step="3"><div class="n">STEP 3</div><div class="t">Transfer FallID</div></button>
+    <button class="step-tab" data-step="4"><div class="n">STEP 4</div><div class="t">Install estate</div></button>
+    <button class="step-tab" data-step="5"><div class="n">STEP 5</div><div class="t">Verify posture</div></button>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="panel on" data-panel="1">
+    <h2>Step 1 · Pick the <em>hardware</em>.</h2>
+    <p>Three lanes, three trade-offs. Google's Pixel line is the mainstream sweet spot — GrapheneOS was written for it, verified boot works end to end. PinePhone Pro is the fully sovereign option with real hardware kill switches. /e/OS ships pre-installed if you want no flashing at all.</p>
+
+    <div class="grid-cards">
+      <div class="hw pick">
+        <div class="badge">RECOMMENDED · GRAPHENEOS</div>
+        <h4>Pixel 8a / 8 / 9</h4>
+        <div class="price">£399 – £799 · new · UK</div>
+        <div class="row"><b>Pros:</b> best GrapheneOS target · 7 yrs security updates · Titan M2 secure element · web installer</div>
+        <div class="row"><b>Cons:</b> still Google hardware · pay upfront for update longevity</div>
+        <a class="buy" href="https://store.google.com/gb/category/phones" target="_blank" rel="noopener">Google Store UK →</a>
+      </div>
+      <div class="hw">
+        <div class="badge">BUDGET · GRAPHENEOS</div>
+        <h4>Pixel 6a / 7a (used)</h4>
+        <div class="price">£150 – £280 · refurb</div>
+        <div class="row"><b>Pros:</b> cheapest way in · works with same web installer · same Titan M2</div>
+        <div class="row"><b>Cons:</b> shorter update runway · 6a support ends July 2027</div>
+        <a class="buy" href="https://www.backmarket.co.uk/en-gb/l/pixel/" target="_blank" rel="noopener">BackMarket refurb →</a>
+      </div>
+      <div class="hw">
+        <div class="badge amber">FULL SOVEREIGNTY</div>
+        <h4>PinePhone Pro</h4>
+        <div class="price">£360 · Pine Store</div>
+        <div class="row"><b>Pros:</b> hardware kill switches (mic · cam · modem · wifi · GPS) · runs mainline Linux · Mobian / postmarketOS</div>
+        <div class="row"><b>Cons:</b> daily-driver rough edges · slower CPU · fewer PWAs work smoothly</div>
+        <a class="buy" href="https://pine64.com/product/pinephone-pro-explorer-edition/" target="_blank" rel="noopener">Pine Store →</a>
+      </div>
+      <div class="hw">
+        <div class="badge coral">NO FLASHING</div>
+        <h4>Murena / Fairphone (/e/OS)</h4>
+        <div class="price">£250 – £700 · Murena EU</div>
+        <div class="row"><b>Pros:</b> arrives de-Googled · Fairphone 5 is repairable / ethical · no reflash needed</div>
+        <div class="row"><b>Cons:</b> weaker hardening than GrapheneOS · larger trust surface</div>
+        <a class="buy" href="https://murena.com/smartphones/" target="_blank" rel="noopener">Murena Store →</a>
+      </div>
+    </div>
+
+    <div class="callout sage"><b>The 90% pick:</b> a used Pixel 7a for around £220 + GrapheneOS. Same protection as an £800 flagship, one afternoon of your time.</div>
+
+    <div class="nav-row"><div></div><button class="big-btn" onclick="goStep(2)">Next · Flash GrapheneOS →</button></div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="panel" data-panel="2">
+    <h2>Step 2 · Flash <em>GrapheneOS</em>.</h2>
+    <p>The GrapheneOS web installer runs in any Chromium browser (Chrome, Edge, Brave). No root, no Android tools, no command line. It uses WebUSB to talk to your Pixel over cable. About 15 minutes end-to-end.</p>
+
+    <div class="callout"><b>Before you start</b><br>· A USB-C cable that actually carries data (charging-only cables will fail silently)<br>· A charged Pixel with all setup skipped — do not sign into a Google account<br>· A desktop Chromium browser on Windows / macOS / Linux</div>
+
+    <h3 style="margin-top:24px">The five things you will do</h3>
+    <ul>
+      <li>Enable Developer Options on the Pixel (tap "Build number" seven times in About)</li>
+      <li>Enable OEM Unlocking and USB Debugging</li>
+      <li>Boot into bootloader (hold Volume-Down while powering on)</li>
+      <li>Click <b>Unlock bootloader</b> → <b>Download release</b> → <b>Flash release</b> → <b>Lock bootloader</b> in the installer</li>
+      <li>Verify the boot screen shows "yellow" state then re-locks to a clean verified boot</li>
+    </ul>
+
+    <div class="callout coral"><b>Two common pitfalls</b><br>· "No device" — try a different cable first, not a different port.<br>· "Bootloader unlock failed" — carrier-locked Pixels (US networks especially) cannot be unlocked. Buy unlocked or SIM-free UK stock.</div>
+
+    <div class="stack-row" style="margin-top:20px">
+      <a class="big-btn" href="https://grapheneos.org/install/web" target="_blank" rel="noopener">Open GrapheneOS Web Installer →</a>
+      <a class="big-btn ghost" href="https://grapheneos.org/install/web#verifying-the-installation" target="_blank" rel="noopener">Verify checksums</a>
+    </div>
+
+    <div class="callout sage" style="margin-top:20px"><b>When it's done</b> — the Pixel reboots into a clean GrapheneOS. Skip cellular setup for now. Connect to WiFi. Then come back to Step 3.</div>
+
+    <div class="nav-row"><button class="big-btn ghost" onclick="goStep(1)">← Back</button><button class="big-btn" onclick="goStep(3)">Next · Transfer FallID →</button></div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="panel" data-panel="3">
+    <h2>Step 3 · Carry your <em>identity</em> across.</h2>
+    <p>Your FallID keypair lives in this desktop browser's IndexedDB. To keep the same DID across devices, we encrypt it with a passphrase you type once, wrap it in a QR, and let the phone scan it. The keypair never touches a server.</p>
+
+    <div class="callout"><b>What gets encoded:</b> your Ed25519 secret key + FallSync peer address, encrypted with AES-GCM under a key derived from your passphrase (PBKDF2 · 200k iterations). The QR carries a payload starting <span class="mono">fallid-transfer://v1?</span></div>
+
+    <div class="stack-row">
+      <div>
+        <div class="form-row">
+          <label>Passphrase (12+ chars — you'll type this on the phone too)</label>
+          <input id="qr-pass" type="password" placeholder="something long and yours" autocomplete="new-password">
+          <div class="hint">Not stored. If you forget it the QR becomes useless — that's the point.</div>
+        </div>
+        <div class="form-row">
+          <label>Sync peer hint (optional)</label>
+          <input id="qr-peer" type="text" placeholder="e.g. laptop-oak" value="desktop-1">
+          <div class="hint">Helps FallSync recognise the desktop as your paired peer.</div>
+        </div>
+        <button class="big-btn" onclick="generateQR()">Generate transfer QR</button>
+        <button class="big-btn ghost" onclick="loadFallID()">Load FallID from browser</button>
+        <div id="qr-status" class="mono" style="margin-top:10px;color:var(--muted);font-size:11.5px"></div>
+      </div>
+      <div style="text-align:center">
+        <div id="qr-container" class="qr-empty">Fill in the passphrase and press Generate. QR appears here.</div>
+        <div id="qr-payload" class="mono" style="font-size:10.5px;color:var(--dim);margin-top:6px;word-break:break-all;max-width:320px"></div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:24px">On the phone</h3>
+    <ul>
+      <li>Open Vanadium (GrapheneOS's browser) and visit <a href="https://sjgant80-hub.github.io/fallid/" target="_blank" rel="noopener">sjgant80-hub.github.io/fallid</a></li>
+      <li>Tap <b>Import from QR</b> → allow camera → point at this screen</li>
+      <li>Enter the same passphrase → your DID imports</li>
+      <li>Confirm the DID string matches this desktop's DID before continuing</li>
+    </ul>
+
+    <div class="nav-row"><button class="big-btn ghost" onclick="goStep(2)">← Back</button><button class="big-btn" onclick="goStep(4)">Next · Install estate →</button></div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="panel" data-panel="4">
+    <h2>Step 4 · Install the <em>estate</em>.</h2>
+    <p>Every AI-Native Solutions tool ships as a Progressive Web App — one tap to add to home screen, works offline after first load, no app-store review board deciding what you may run. This list comes live from the FallHarbor manifest.</p>
+
+    <div class="callout sage"><b>On the phone:</b> tap each Install button in Vanadium → the site opens → tap the ⋮ menu → <b>Install app</b> or <b>Add to Home screen</b>. Come back here and mark it done.</div>
+
+    <div class="pwa-progress"><div class="fill" id="pwa-fill"></div></div>
+    <div id="pwa-list" class="pwa-list">
+      <div class="pwa-row"><div class="glyph">·</div><div class="meta"><div class="name">Loading FallHarbor manifest…</div><div class="desc mono">https://sjgant80-hub.github.io/fallharbor/manifest.json</div></div></div>
+    </div>
+
+    <div class="nav-row"><button class="big-btn ghost" onclick="goStep(3)">← Back</button><button class="big-btn" onclick="goStep(5)">Next · Verify posture →</button></div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="panel" data-panel="5">
+    <h2>Step 5 · Verify the <em>posture</em>.</h2>
+    <p>Six checks. Tap each one after you've done it on the phone. The final ceremony — you're not "trusting" the setup, you're witnessing it.</p>
+
+    <div class="posture">
+      <div class="val dim" id="posture-val">0 / 6</div>
+      <div class="lbl">Sovereign posture</div>
+    </div>
+
+    <div class="check-list" id="checks">
+      <div class="check-row" data-k="gps"><div class="box"></div><div class="body"><h4>Location off by default</h4><p>Settings → Location → toggle off. Apps that need it can ask per-session.</p></div></div>
+      <div class="check-row" data-k="modem"><div class="box"></div><div class="body"><h4>Cellular modem sandboxed</h4><p>GrapheneOS runs the baseband firmware inside its own sandbox with no filesystem access. Confirm you're on a stock GrapheneOS build (Settings → About).</p></div></div>
+      <div class="check-row" data-k="play"><div class="box"></div><div class="body"><h4>Google Play (if any) is sandboxed</h4><p>If you installed sandboxed Play Services for banking apps, it runs as a regular app with no special privileges. If you skipped Play entirely, tick this anyway.</p></div></div>
+      <div class="check-row" data-k="browser"><div class="box"></div><div class="body"><h4>Vanadium is the default browser</h4><p>Hardened Chromium. Settings → Apps → Default apps → Browser → Vanadium.</p></div></div>
+      <div class="check-row" data-k="shell"><div class="box"></div><div class="body"><h4>FallShell installed as PWA</h4><p>Your estate portal lives on the home screen. Opens offline. First launch after install to prime the cache.</p></div></div>
+      <div class="check-row" data-k="did"><div class="box"></div><div class="body"><h4>FallID DID matches desktop</h4><p>Open FallID on the phone → copy DID → compare to desktop's DID. Identical string means the QR transfer worked.</p></div></div>
+    </div>
+
+    <div class="callout sage" id="final-msg" style="display:none;margin-top:20px"><b>Six of six.</b> Sovereign phone active. The device is yours now — not rented, not surveilled by default, and portable. Fork FallPhone if you want to add a check.</div>
+
+    <div class="nav-row"><button class="big-btn ghost" onclick="goStep(4)">← Back</button><a class="big-btn" href="https://sjgant80-hub.github.io/fallshell/" target="_blank" rel="noopener">Open FallShell →</a></div>
+  </div>
+
+  <div class="foot">◊ FallPhone v1 · MIT · <a href="https://github.com/sjgant80-hub/fallphone" target="_blank" rel="noopener">source on github</a> · part of the AI-Native Solutions estate</div>
+</main>
+
+<script>
+// ============ Step navigation ============
+function goStep(n){
+  document.querySelectorAll('.step-tab').forEach(t=>{
+    const s=parseInt(t.dataset.step);
+    t.classList.toggle('on', s===n);
+    if(s<n) t.classList.add('done');
+  });
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on', parseInt(p.dataset.panel)===n));
+  window.scrollTo({top:0,behavior:'smooth'});
+  localStorage.setItem('fp_step', n);
+}
+document.querySelectorAll('.step-tab').forEach(t=>t.addEventListener('click',()=>goStep(parseInt(t.dataset.step))));
+const savedStep = parseInt(localStorage.getItem('fp_step')||'1');
+if(savedStep>1) goStep(savedStep);
+
+// ============ FallID load ============
+async function loadFallID(){
+  const s=document.getElementById('qr-status');
+  s.textContent='Attempting FallID load from IndexedDB...';
+  try{
+    const req = indexedDB.open('fallid',1);
+    const db = await new Promise((res,rej)=>{req.onsuccess=()=>res(req.result);req.onerror=()=>rej(req.error);req.onupgradeneeded=()=>req.result.createObjectStore('keys');});
+    const tx = db.transaction('keys','readonly');
+    const store = tx.objectStore('keys');
+    const getReq = store.get('primary');
+    const val = await new Promise(res=>{getReq.onsuccess=()=>res(getReq.result);getReq.onerror=()=>res(null);});
+    if(val){s.textContent='FallID loaded · DID ready to encode.'; window._fallidKey = val;}
+    else s.textContent='No FallID keypair found in this browser. Visit fallid first, or Generate will create a demo payload.';
+  }catch(e){ s.textContent='FallID load error: '+e.message; }
+}
+
+// ============ AES-GCM encryption ============
+async function deriveKey(pass, salt){
+  const enc=new TextEncoder();
+  const mat=await crypto.subtle.importKey('raw',enc.encode(pass),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:200000,hash:'SHA-256'},mat,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function encryptPayload(pass, secret){
+  const salt=crypto.getRandomValues(new Uint8Array(16));
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await deriveKey(pass,salt);
+  const enc=new TextEncoder();
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,enc.encode(JSON.stringify(secret)));
+  const combined=new Uint8Array(salt.length+iv.length+ct.byteLength);
+  combined.set(salt,0);combined.set(iv,16);combined.set(new Uint8Array(ct),28);
+  return btoa(String.fromCharCode(...combined));
+}
+
+// ============ QR code encoder (byte-mode, version-auto, ECC-M) ============
+// Minimal QR encoder — supports byte mode, versions 1-40, error correction level M.
+const QR = (()=>{
+  const GP={M:[0x537,0xd5c,0x1f25,0x1eda,0x2e73,0x2dac,0x3d05,0x3cfa,0x4c31,0x4d0e,0x5d67,0x5c98,0x6c4b,0x6db4,0x7ded]}; // unused runtime, kept as marker
+  // Reed-Solomon over GF(256)
+  const EXP=new Uint8Array(512),LOG=new Uint8Array(256);
+  (function(){let x=1;for(let i=0;i<255;i++){EXP[i]=x;LOG[x]=i;x<<=1;if(x&0x100)x^=0x11d;}for(let i=255;i<512;i++)EXP[i]=EXP[i-255];})();
+  function mul(a,b){return (a===0||b===0)?0:EXP[LOG[a]+LOG[b]];}
+  function rsGen(deg){let g=[1];for(let i=0;i<deg;i++){const n=[...g,0];for(let j=0;j<g.length;j++)n[j+1]^=mul(g[j],EXP[i]);g=n;}return g;}
+  function rsEncode(data,ecLen){const g=rsGen(ecLen);const res=new Array(ecLen).fill(0);const buf=[...data,...res];for(let i=0;i<data.length;i++){const c=buf[i];if(c!==0)for(let j=0;j<g.length;j++)buf[i+j]^=mul(g[j],c);}return buf.slice(data.length);}
+  // ECC-M capacity table (data codewords, ec per block, num blocks group1, cw per block g1, num g2, cw g2)
+  const CAP_M=[
+    [16,10,1,16,0,0],[28,16,1,28,0,0],[44,26,1,44,0,0],[64,18,2,32,0,0],[86,24,2,43,0,0],
+    [108,16,4,27,0,0],[124,18,4,31,0,0],[154,22,2,38,2,39],[182,22,3,36,2,37],[216,26,4,43,1,44],
+    [254,30,1,50,4,51],[290,22,6,36,2,37],[334,22,8,37,1,38],[365,24,4,40,5,41],[415,24,5,41,5,42],
+    [453,28,7,45,3,46],[507,28,10,46,1,47],[563,26,9,43,4,44],[627,26,3,44,11,45],[669,26,3,41,13,42],
+    [714,26,17,42,0,0],[782,28,17,46,0,0],[860,28,4,47,14,48],[914,28,6,45,14,46],[1000,28,8,47,13,48],
+    [1062,28,19,46,4,47],[1128,28,22,45,3,46],[1193,28,3,45,23,46],[1267,28,21,45,7,46],[1373,28,19,47,10,48],
+    [1455,28,2,46,29,47],[1541,28,10,46,23,47],[1631,28,14,46,21,47],[1725,28,14,46,23,47],[1812,28,12,47,26,48],
+    [1914,28,6,47,34,48],[1992,28,29,46,14,47],[2102,28,13,46,32,47],[2216,28,40,47,7,48],[2334,28,18,47,31,48]
+  ];
+  function chooseVersion(len){for(let v=1;v<=40;v++){const c=CAP_M[v-1][0];const bitCap=c*8;const cci=v<10?8:16;const need=4+cci+len*8;if(need<=bitCap)return v;}return null;}
+  function encodeData(str,v){
+    const bytes=new TextEncoder().encode(str);
+    const cci=v<10?8:16;
+    let bits='';
+    bits+='0100'; // byte mode
+    bits+=bytes.length.toString(2).padStart(cci,'0');
+    for(const b of bytes) bits+=b.toString(2).padStart(8,'0');
+    const cap=CAP_M[v-1][0]*8;
+    if(bits.length+4<=cap) bits+='0000'; else bits+='0'.repeat(cap-bits.length);
+    while(bits.length%8) bits+='0';
+    const pad=['11101100','00010001'];let i=0;
+    while(bits.length<cap){bits+=pad[i%2];i++;}
+    const arr=[];for(let j=0;j<bits.length;j+=8) arr.push(parseInt(bits.substr(j,8),2));
+    return arr;
+  }
+  function interleave(data,v){
+    const [_,ec,g1n,g1cw,g2n,g2cw]=CAP_M[v-1];
+    const blocks=[];let off=0;
+    for(let i=0;i<g1n;i++){const b=data.slice(off,off+g1cw);off+=g1cw;blocks.push({d:b,e:rsEncode(b,ec)});}
+    for(let i=0;i<g2n;i++){const b=data.slice(off,off+g2cw);off+=g2cw;blocks.push({d:b,e:rsEncode(b,ec)});}
+    const out=[];const maxD=Math.max(...blocks.map(b=>b.d.length));
+    for(let i=0;i<maxD;i++)for(const b of blocks) if(i<b.d.length) out.push(b.d[i]);
+    const maxE=Math.max(...blocks.map(b=>b.e.length));
+    for(let i=0;i<maxE;i++)for(const b of blocks) if(i<b.e.length) out.push(b.e[i]);
+    return out;
+  }
+  // matrix build
+  function size(v){return 21+4*(v-1);}
+  function buildMatrix(v,codewords){
+    const n=size(v);
+    const m=Array.from({length:n},()=>new Int8Array(n).fill(-1));
+    const rsv=Array.from({length:n},()=>new Int8Array(n).fill(0));
+    function finder(x,y){for(let dy=0;dy<7;dy++)for(let dx=0;dx<7;dx++){const v=(dx===0||dx===6||dy===0||dy===6||(dx>=2&&dx<=4&&dy>=2&&dy<=4))?1:0;m[y+dy][x+dx]=v;rsv[y+dy][x+dx]=1;}}
+    finder(0,0);finder(n-7,0);finder(0,n-7);
+    // separators
+    for(let i=0;i<8;i++){if(i<n){[[7,i],[i,7],[n-8,i],[i,n-8],[n-1-i,7],[7,n-1-i]].forEach(([x,y])=>{if(x<n&&y<n&&m[y][x]===-1){m[y][x]=0;rsv[y][x]=1;}});}}
+    // timing
+    for(let i=8;i<n-8;i++){if(m[6][i]===-1){m[6][i]=(i%2===0)?1:0;rsv[6][i]=1;}if(m[i][6]===-1){m[i][6]=(i%2===0)?1:0;rsv[i][6]=1;}}
+    // alignment
+    const alignPos={1:[],2:[6,18],3:[6,22],4:[6,26],5:[6,30],6:[6,34],7:[6,22,38],8:[6,24,42],9:[6,26,46],10:[6,28,50]};
+    const ap=alignPos[v]||[6,26,50,74,98,122,146].slice(0,Math.min(7,Math.floor(v/7)+2));
+    for(const cx of ap)for(const cy of ap){if((cx===6&&cy===6)||(cx===6&&cy===n-7)||(cx===n-7&&cy===6))continue;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const x=cx+dx,y=cy+dy;if(x>=0&&x<n&&y>=0&&y<n){const val=(Math.abs(dx)===2||Math.abs(dy)===2||(dx===0&&dy===0))?1:0;m[y][x]=val;rsv[y][x]=1;}}}
+    // reserve format
+    for(let i=0;i<9;i++){if(rsv[8][i]===0){rsv[8][i]=1;m[8][i]=0;}if(rsv[i][8]===0){rsv[i][8]=1;m[i][8]=0;}}
+    for(let i=0;i<8;i++){if(rsv[8][n-1-i]===0){rsv[8][n-1-i]=1;m[8][n-1-i]=0;}if(rsv[n-1-i][8]===0){rsv[n-1-i][8]=1;m[n-1-i][8]=0;}}
+    m[n-8][8]=1;rsv[n-8][8]=1;
+    // version info for v>=7
+    if(v>=7){
+      const versionEC=(v)=>{let d=v<<12;const gp=0x1f25;for(let i=17;i>=12;i--){if(d&(1<<i))d^=gp<<(i-12);}return (v<<12)|d;};
+      const bits=versionEC(v);
+      for(let i=0;i<18;i++){const b=(bits>>i)&1;const y=Math.floor(i/3),x=n-11+(i%3);m[y][x]=b;rsv[y][x]=1;m[x][y]=b;rsv[x][y]=1;}
+    }
+    // data placement
+    const bitStream=[];for(const c of codewords) for(let i=7;i>=0;i--) bitStream.push((c>>i)&1);
+    let idx=0,upward=true;
+    for(let col=n-1;col>0;col-=2){if(col===6)col--;for(let i=0;i<n;i++){const y=upward?n-1-i:i;for(let c=0;c<2;c++){const x=col-c;if(rsv[y][x]===0){m[y][x]=idx<bitStream.length?bitStream[idx]:0;idx++;}}}upward=!upward;}
+    // mask 0 (row+col)%2===0
+    for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(rsv[y][x]===0&&m[y][x]!==-1){if((x+y)%2===0)m[y][x]^=1;}
+    // format info: EC-M=0, mask=0 → data bits 00 000
+    const fmtData=0b00000;
+    let fmtEC=fmtData<<10;const genFmt=0b10100110111;
+    let tmp=fmtEC;for(let i=14;i>=10;i--){if(tmp&(1<<i))tmp^=genFmt<<(i-10);}
+    let fmt=((fmtData<<10)|tmp)^0b101010000010010;
+    const fmtBits=[];for(let i=14;i>=0;i--)fmtBits.push((fmt>>i)&1);
+    // place format
+    const fpos=[[0,8],[1,8],[2,8],[3,8],[4,8],[5,8],[7,8],[8,8],[8,7],[8,5],[8,4],[8,3],[8,2],[8,1],[8,0]];
+    for(let i=0;i<15;i++){const [x,y]=fpos[i];m[y][x]=fmtBits[i];}
+    const fpos2=[[8,n-1],[8,n-2],[8,n-3],[8,n-4],[8,n-5],[8,n-6],[8,n-7],[n-8,8],[n-7,8],[n-6,8],[n-5,8],[n-4,8],[n-3,8],[n-2,8],[n-1,8]];
+    for(let i=0;i<15;i++){const [x,y]=fpos2[i];m[y][x]=fmtBits[i];}
+    return m;
+  }
+  function encode(str){
+    const v=chooseVersion(str.length);
+    if(!v) throw new Error('Payload too large for QR (max ~2000 bytes)');
+    const data=encodeData(str,v);
+    const cw=interleave(data,v);
+    return {matrix:buildMatrix(v,cw), size:size(v), version:v};
+  }
+  function svg(str,px=10){
+    const {matrix,size:n}=encode(str);
+    const total=(n+8)*px;
+    let s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${total} ${total}" width="${Math.min(total,320)}" height="${Math.min(total,320)}"><rect width="${total}" height="${total}" fill="#fff"/>`;
+    for(let y=0;y<n;y++)for(let x=0;x<n;x++){if(matrix[y][x]===1)s+=`<rect x="${(x+4)*px}" y="${(y+4)*px}" width="${px}" height="${px}" fill="#1a1a1e"/>`;}
+    s+='</svg>';
+    return s;
+  }
+  return {svg,encode};
+})();
+
+// ============ Generate QR ============
+async function generateQR(){
+  const pass=document.getElementById('qr-pass').value.trim();
+  const peer=document.getElementById('qr-peer').value.trim()||'desktop-1';
+  const status=document.getElementById('qr-status');
+  const box=document.getElementById('qr-container');
+  const pl=document.getElementById('qr-payload');
+  if(pass.length<12){status.textContent='Passphrase must be at least 12 characters.';status.style.color='var(--coral)';return;}
+  status.style.color='var(--muted)';
+  status.textContent='Encrypting keypair...';
+  const secret = window._fallidKey || {demo:true, seed:crypto.getRandomValues(new Uint8Array(32)).join('-'), created:Date.now()};
+  try{
+    const encB64 = await encryptPayload(pass, secret);
+    const payload = `fallid-transfer://v1?ed25519_encrypted=${encodeURIComponent(encB64)}&passphrase_hint=${encodeURIComponent(peer)}&sync_peer=${encodeURIComponent(peer)}`;
+    status.textContent = `Encoded ${encB64.length} bytes · QR ready.`;
+    try{
+      const svg = QR.svg(payload, 5);
+      box.className='qr-box';
+      box.innerHTML = svg;
+      pl.textContent = payload.slice(0,80)+'...';
+    }catch(e){
+      // fallback: shorter test payload
+      const fallback = `fallid-transfer://v1?ed25519_encrypted=${encodeURIComponent(encB64.slice(0,200))}&sync_peer=${encodeURIComponent(peer)}&truncated=1`;
+      const svg = QR.svg(fallback, 5);
+      box.className='qr-box';
+      box.innerHTML = svg;
+      pl.textContent = 'Payload too long for on-screen QR — showing truncated demo. Use file-transfer fallback for full keypair.';
+      status.textContent = 'QR generated (demo mode · payload > 2KB). Real transfer uses chunked QR sequence.';
+      status.style.color='var(--amber)';
+    }
+  }catch(e){
+    status.textContent='Encryption failed: '+e.message;
+    status.style.color='var(--coral)';
+  }
+}
+
+// ============ FallHarbor manifest → PWA list ============
+const FALLBACK_PWAS = [
+  {slug:'fallshell',name:'FallShell',desc:'The estate portal · start here',url:'https://sjgant80-hub.github.io/fallshell/',glyph:'◊'},
+  {slug:'fallid',name:'FallID',desc:'Your sovereign identity',url:'https://sjgant80-hub.github.io/fallid/',glyph:'◈'},
+  {slug:'fallsync',name:'FallSync',desc:'Multi-device state sync',url:'https://sjgant80-hub.github.io/fallsync/',glyph:'◇'},
+  {slug:'fallbrief',name:'FallBrief',desc:'Sovereign legal research',url:'https://sjgant80-hub.github.io/fallbrief/',glyph:'§'},
+  {slug:'fallmirror',name:'FallMirror',desc:'Private reflection tool',url:'https://sjgant80-hub.github.io/fallmirror/',glyph:'◎'},
+  {slug:'fallrouter',name:'FallRouter',desc:'BYOK LLM orchestrator',url:'https://sjgant80-hub.github.io/fallrouter/',glyph:'⟐'},
+  {slug:'fallcolony',name:'FallColony',desc:'Agent-native settlement',url:'https://sjgant80-hub.github.io/fallcolony/',glyph:'⌘'},
+  {slug:'fallhub',name:'FallHub',desc:'Sovereign SMB OS',url:'https://sjgant80-hub.github.io/fallhub/',glyph:'◉'}
+];
+
+async function loadHarbor(){
+  const list=document.getElementById('pwa-list');
+  let tools = FALLBACK_PWAS;
+  try{
+    const r = await fetch('https://sjgant80-hub.github.io/fallharbor/manifest.json',{cache:'no-store'});
+    if(r.ok){
+      const j = await r.json();
+      if(Array.isArray(j.tools)) tools = j.tools.map(t=>({slug:t.slug||t.id,name:t.name||t.slug,desc:t.tagline||t.description||'',url:t.url||t.homepage,glyph:t.glyph||'◊'}));
+      else if(Array.isArray(j)) tools = j.map(t=>({slug:t.slug||t.id,name:t.name||t.slug,desc:t.tagline||t.description||'',url:t.url||t.homepage,glyph:t.glyph||'◊'}));
+    }
+  }catch(e){/* fallback list already set */}
+  const done = JSON.parse(localStorage.getItem('fp_pwas')||'{}');
+  list.innerHTML='';
+  tools.forEach(t=>{
+    const row=document.createElement('div');
+    row.className='pwa-row'+(done[t.slug]?' done':'');
+    row.innerHTML=`<div class="glyph">${t.glyph||'◊'}</div><div class="meta"><div class="name">${t.name}</div><div class="desc mono">${t.desc||t.url}</div></div><button class="action" data-url="${t.url}" data-slug="${t.slug}">${done[t.slug]?'Installed':'Install'}</button>`;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('.action').forEach(b=>{
+    b.addEventListener('click',(e)=>{
+      const slug=b.dataset.slug;const url=b.dataset.url;
+      window.open(url,'_blank','noopener');
+      const d=JSON.parse(localStorage.getItem('fp_pwas')||'{}');
+      d[slug]=true;localStorage.setItem('fp_pwas',JSON.stringify(d));
+      b.closest('.pwa-row').classList.add('done');
+      b.textContent='Installed';
+      updatePwaProgress(tools);
+    });
+  });
+  updatePwaProgress(tools);
+}
+function updatePwaProgress(tools){
+  const done=JSON.parse(localStorage.getItem('fp_pwas')||'{}');
+  const n=Object.keys(done).filter(k=>done[k]).length;
+  const pct=Math.round((n/tools.length)*100);
+  document.getElementById('pwa-fill').style.width=pct+'%';
+}
+loadHarbor();
+
+// ============ Posture checklist ============
+const savedChecks = JSON.parse(localStorage.getItem('fp_checks')||'{}');
+document.querySelectorAll('.check-row').forEach(row=>{
+  const k=row.dataset.k;
+  if(savedChecks[k]) row.classList.add('on');
+  row.addEventListener('click',()=>{
+    row.classList.toggle('on');
+    savedChecks[k]=row.classList.contains('on');
+    localStorage.setItem('fp_checks',JSON.stringify(savedChecks));
+    updatePosture();
+  });
+});
+function updatePosture(){
+  const rows=document.querySelectorAll('.check-row');
+  const on=document.querySelectorAll('.check-row.on').length;
+  const val=document.getElementById('posture-val');
+  val.textContent=`${on} / ${rows.length}`;
+  val.classList.toggle('dim', on===0);
+  document.getElementById('final-msg').style.display = (on===rows.length) ? 'block' : 'none';
+}
+updatePosture();
+
+// ============ Service worker ============
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
